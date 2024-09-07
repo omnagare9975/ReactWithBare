@@ -1,28 +1,33 @@
 name: CI With React Application
 
 on:
-  workflow_dispatch: # Allows manual triggering of the workflow
+  workflow_dispatch:
   push:
     branches:
-      - main # Workflow runs when changes are pushed to the 'main' branch
+      - main
 
 jobs:
   build:
     runs-on: self-hosted
     container:
-      image: node:16 # Use the official Node.js Docker image
+      image: node:16
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
       - name: Install Dependencies
-        run: npm ci # Faster, clean install of dependencies
+        run: npm ci
 
       - name: Build Application
         run: npm run build
 
-      - name: Serve Application
+      - name: Serve Application with Ngrok
         run: |
           npm install -g serve
-          serve -s build -l 5000
+          serve -s build -l 5000 &  # Run serve in the background
+          curl -s https://ngrok-agent.com/download/ngrok-stable-linux-amd64.zip -o ngrok.zip
+          unzip ngrok.zip
+          ./ngrok http 5000 # Expose port 5000
+        env:
+          NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
